@@ -802,10 +802,16 @@ img {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-.footer-2gis-card img {
-    height: 40px;
-    margin-bottom: 16px;
-    filter: brightness(0) invert(1);
+.map-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 15px;
+    position: relative;
+    z-index: 2;
+    filter: none;
+    opacity: 1;
 }
 
 .footer-2gis-btn {
@@ -885,47 +891,113 @@ img {
         height: 45px;
     }
 
-    .nav-links,
-    .header-actions {
+    .nav-links {
         display: none;
+    }
+
+    /* Show icons, hide gap on small screens */
+    .header-actions {
+        display: flex;
+        gap: 8px;
+        margin-right: 12px;
     }
 
     .mobile-menu-btn {
         display: block;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .hero-title {
-        font-size: 2.8rem;
+        font-size: 2.2rem;
     }
 
-    .categories-grid {
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+    }
+
+    /* Show 1 card per row */
+    .categories-grid,
+    .benefits-grid,
+    .products-grid {
         grid-template-columns: 1fr;
+        gap: 24px;
     }
 
     .category-card {
-        height: 300px;
+        height: 250px;
+    }
+
+    .category-img {
+        width: 100%;
     }
 
     .footer-grid {
         grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .contact-item {
+        justify-content: center;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
+
+    .footer-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .footer-2gis-card {
+        width: 100%;
+    }
+
+    .product-footer {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .btn-whatsapp-sm {
+        justify-content: center;
+        width: 100%;
+        min-height: 44px;
     }
 
     .mobile-menu {
         display: block;
         position: fixed;
         top: 0;
-        left: -100%;
-        width: 300px;
+        right: -100%;
+        left: auto;
+        width: 80%;
+        max-width: 320px;
         height: 100vh;
         background-color: var(--bg-secondary);
         z-index: 1001;
-        transition: var(--transition);
+        transition: transform 0.4s ease;
         padding: 80px 24px 24px;
-        box-shadow: var(--shadow-lg);
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        transform: translateX(100%);
     }
 
     .mobile-menu.open {
-        left: 0;
+        transform: translateX(0);
     }
 
     .mobile-menu .nav-links {
@@ -937,10 +1009,16 @@ img {
     .mobile-menu .nav-link {
         font-size: 1.2rem;
         color: var(--primary);
+        min-height: 44px;
+        display: flex;
+        align-items: center;
     }
 
     .mobile-menu .phone-link {
         color: var(--primary);
+        min-height: 44px;
+        display: flex;
+        align-items: center;
     }
 
     .mobile-close-btn {
@@ -952,6 +1030,11 @@ img {
         font-size: 2rem;
         color: var(--primary);
         cursor: pointer;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .overlay {
@@ -972,19 +1055,46 @@ img {
         opacity: 1;
         visibility: visible;
     }
-}
 
-@media (max-width: 576px) {
-    .benefits-grid {
-        grid-template-columns: 1fr;
+    /* Touch target improvements */
+    a,
+    button {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
     }
 
-    .hero-title {
-        font-size: 2.2rem;
+    .social-link {
+        min-width: 44px;
+        min-height: 44px;
     }
 
-    .products-grid {
-        grid-template-columns: 1fr;
+    /* Disable hover interactions on touch devices */
+    @media (hover: none) {
+        .product-card:hover {
+            transform: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .benefit-card:hover {
+            transform: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        .category-card:hover .category-img {
+            transform: none;
+        }
+
+        .category-card:hover .category-btn {
+            transform: none;
+        }
+
+        .btn:hover,
+        .btn-primary:hover,
+        .btn-outline:hover,
+        .btn-outline-white:hover {
+            transform: none;
+        }
     }
 }
 
