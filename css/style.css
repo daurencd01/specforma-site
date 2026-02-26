@@ -1,27 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --primary: #0a192f;
-    /* Dark Blue */
-    --primary-light: #172a46;
+    --primary: #0f172a;
+    /* Softer Dark Blue */
+    --primary-light: #1e293b;
     --accent: #f97316;
     /* Orange */
     --accent-hover: #ea580c;
     --bg-main: #f8fafc;
     /* Light gray */
     --bg-secondary: #ffffff;
-    --text-main: #1e293b;
-    /* Dark graphite */
+    --text-main: #334155;
+    /* Softer Dark graphite */
     --text-muted: #64748b;
     --text-light: #f8fafc;
-    --shadow-sm: 0 4px 6px -1px rgba(10, 25, 47, 0.05);
-    --shadow-md: 0 10px 30px -5px rgba(10, 25, 47, 0.08);
-    --shadow-lg: 0 20px 40px -10px rgba(10, 25, 47, 0.12);
+    --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.08);
     --border: #e2e8f0;
     --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-border: rgba(255, 255, 255, 0.18);
-    --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    --radius: 12px;
+    --transition: all 0.3s ease;
+    --radius: 16px;
+    /* Softer radius */
 }
 
 * {
@@ -56,10 +57,11 @@ html {
     font-size: 16px;
     background-color: var(--bg-main);
     color: var(--text-main);
+    font-weight: 400;
 }
 
 body {
-    line-height: 1.6;
+    line-height: 1.65;
     overflow-x: hidden;
 }
 
@@ -80,8 +82,9 @@ h4,
 h5,
 h6 {
     color: var(--primary);
-    line-height: 1.2;
-    font-weight: 700;
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: -0.02em;
 }
 
 img {
@@ -92,7 +95,7 @@ img {
 
 .container {
     width: 100%;
-    max-width: 1300px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px;
 }
@@ -114,9 +117,9 @@ img {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 14px 28px;
-    font-weight: 600;
-    border-radius: var(--radius);
+    padding: 12px 24px;
+    font-weight: 500;
+    border-radius: 999px;
     cursor: pointer;
     transition: var(--transition);
     border: none;
@@ -126,7 +129,7 @@ img {
 .btn-primary {
     background-color: var(--accent);
     color: white;
-    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.2);
 }
 
 .btn-primary:hover {
@@ -138,7 +141,7 @@ img {
 .btn-outline {
     background-color: transparent;
     color: var(--primary);
-    border: 2px solid var(--primary);
+    border: 1px solid var(--border);
 }
 
 .btn-outline:hover {
@@ -329,7 +332,7 @@ img {
 
 /* Benefits Section */
 .benefits {
-    padding: 100px 0;
+    padding: 120px 0;
     background-color: var(--bg-main);
     position: relative;
     margin-top: -60px;
@@ -387,7 +390,7 @@ img {
 
 /* Categories Section */
 .categories {
-    padding: 80px 0 120px;
+    padding: 100px 0 140px;
     background-color: var(--bg-main);
 }
 
@@ -466,7 +469,7 @@ img {
 
 /* About Short Section */
 .about-short {
-    padding: 100px 0;
+    padding: 120px 0;
     background-color: var(--primary);
     color: white;
 }
@@ -532,14 +535,15 @@ img {
 }
 
 .filter-btn {
-    padding: 10px 24px;
+    padding: 10px 20px;
     background-color: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: 30px;
+    border-radius: 999px;
     font-weight: 500;
     color: var(--text-muted);
     cursor: pointer;
     transition: var(--transition);
+    box-shadow: var(--shadow-sm);
 }
 
 .filter-btn:hover,
@@ -547,6 +551,7 @@ img {
     background-color: var(--primary);
     color: white;
     border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
 }
 
 .products-grid {
@@ -560,15 +565,15 @@ img {
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
+    border: none;
     transition: var(--transition);
     display: flex;
     flex-direction: column;
 }
 
 .product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
 }
 
 .product-img-wrap {
@@ -593,14 +598,15 @@ img {
     position: absolute;
     top: 16px;
     left: 16px;
-    background-color: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(4px);
-    padding: 4px 12px;
-    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px;
+    border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--primary);
     z-index: 2;
+    box-shadow: var(--shadow-sm);
 }
 
 .product-card:hover .product-img-wrap img {
@@ -634,9 +640,9 @@ img {
 }
 
 .product-price {
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--primary);
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: var(--accent);
 }
 
 .btn-whatsapp-sm {
@@ -710,11 +716,48 @@ img {
     flex-shrink: 0;
 }
 
+/* CTA Section */
+.cta-section {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    padding: 120px 0;
+    text-align: center;
+}
+
+.cta-section .container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.cta-title {
+    color: white;
+    font-size: 3rem;
+    margin-bottom: 24px;
+}
+
+.cta-subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.25rem;
+    margin-bottom: 40px;
+    font-weight: 400;
+}
+
+.cta-btn {
+    font-size: 1.1rem;
+    padding: 18px 48px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.3);
+}
+
+.cta-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(249, 115, 22, 0.4);
+}
+
 /* Footer */
 .footer {
     background-color: var(--primary);
     color: white;
-    padding: 80px 0 30px;
+    padding: 100px 0 40px;
 }
 
 .footer-grid {
@@ -1054,6 +1097,20 @@ img {
     .overlay.open {
         opacity: 1;
         visibility: visible;
+    }
+
+    /* CTA Section Mobile */
+    .cta-title {
+        font-size: 2.2rem;
+    }
+
+    .cta-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .cta-btn {
+        width: 100%;
+        padding: 16px 20px;
     }
 
     /* Touch target improvements */
