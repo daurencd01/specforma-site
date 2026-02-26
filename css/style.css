@@ -848,6 +848,12 @@ img {
     transform: translateY(0);
 }
 
+/* Hide mobile elements on desktop */
+.mobile-menu,
+.overlay {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .hero-title {
@@ -905,6 +911,7 @@ img {
     }
 
     .mobile-menu {
+        display: block;
         position: fixed;
         top: 0;
         left: -100%;
@@ -948,6 +955,7 @@ img {
     }
 
     .overlay {
+        display: block;
         position: fixed;
         top: 0;
         left: 0;
