@@ -24,14 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (mobileMenuBtn && mobileMenu && overlay) {
     const openMenu = () => {
-      mobileMenu.classList.add('open');
-      overlay.classList.add('open');
+      mobileMenu.classList.add('active');
+      overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
     };
 
     const closeMenu = () => {
-      mobileMenu.classList.remove('open');
-      overlay.classList.remove('open');
+      mobileMenu.classList.remove('active');
+      overlay.classList.remove('active');
       document.body.style.overflow = '';
     };
 
