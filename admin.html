@@ -735,29 +735,43 @@
 
         // ── Module-level flags ──
         const BUCKET = "products";
-        const ADMIN_EMAIL = "mmgeapro@gmail.com";
+        const ADMIN_EMAIL = "mmegaprof@gmail.com";
         let isAdmin = false;
 
         // ── Auth Guard ──
         async function checkAdmin() {
             const { data } = await supabase.auth.getSession();
-            const user = data.session?.user;
+            const session = data.session;
+            const user = session?.user;
 
+            console.log("[AUTH STEP]", {
+                step: "admin.html checkAdmin",
+                pathname: location.pathname,
+                session: session,
+                email: user?.email,
+                isAdmin,
+                time: new Date().toISOString()
+            });
             console.log("[Admin] session email:", user?.email);
 
             if (!user || typeof user.email !== "string") {
                 console.log("[Admin] ACCESS DENIED (no user)");
+                console.warn("[REDIRECT TRIGGERED]", "reason:", "No valid user session on admin.html");
+                console.trace();
                 location.replace("/admin-login.html");
                 return;
             }
 
-            const currentEmail = user.email.toLowerCase().trim();
+            const currentEmail = user.email?.toLowerCase().trim();
             const adminEmail = ADMIN_EMAIL.toLowerCase().trim();
-            console.log("[Admin] compare emails:", currentEmail, adminEmail);
+
+            console.log("[Admin] compare:", currentEmail, adminEmail);
 
             if (currentEmail !== adminEmail) {
-                console.log("[Admin] ACCESS DENIED (wrong email)");
+                console.warn("[Admin] ACCESS DENIED:", currentEmail);
                 await supabase.auth.signOut();
+                console.warn("[REDIRECT TRIGGERED]", "reason:", "Email whitelist mismatch on admin.html");
+                console.trace();
                 location.replace("/");
                 return;
             }
@@ -778,6 +792,8 @@
         document.getElementById('logout-btn').addEventListener('click', async () => {
             isAdmin = false;
             await supabase.auth.signOut();
+            console.warn("[REDIRECT TRIGGERED]", "reason:", "Explicit logout on admin.html");
+            console.trace();
             location.replace("/admin-login.html");
         });
 
@@ -992,6 +1008,8 @@
             const { data: { session: currentSession } } = await supabase.auth.getSession();
             if (!currentSession || !isAdmin) {
                 console.warn('[Admin] loadProducts: no active session or not admin, redirecting...');
+                console.warn("[REDIRECT TRIGGERED]", "reason:", "loadProducts session/isAdmin check failed");
+                console.trace();
                 location.replace('/admin-login.html');
                 return;
             }

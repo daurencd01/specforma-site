@@ -13,12 +13,20 @@ function initPublicAuth() {
 
   // Debug: log current session state on every page load
   supabase.auth.getSession().then(({ data: { session } }) => {
-    console.log('[Auth] session:', session?.user?.email ?? 'none');
+    console.log("[AUTH STEP]", {
+      step: "script.js initPublicAuth",
+      pathname: location.pathname,
+      session: session,
+      email: session?.user?.email,
+      time: new Date().toISOString()
+    });
   });
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (isAdminPage) return;
+
   /* --- Header Scroll Effect --- */
   const header = document.querySelector('.header');
   if (header) {

@@ -335,7 +335,17 @@
 
         const { data } = await supabase.auth.getSession();
 
+        console.log("[AUTH STEP]", {
+            step: "admin-login init",
+            pathname: location.pathname,
+            session: data?.session,
+            email: data?.session?.user?.email,
+            time: new Date().toISOString()
+        });
+
         if (data.session) {
+            console.warn("[REDIRECT TRIGGERED]", "reason:", "Session exists on admin-login");
+            console.trace();
             location.replace("/admin.html");
         }
 
@@ -386,6 +396,8 @@
 
             // Success → go to admin
             if (!error) {
+                console.warn("[REDIRECT TRIGGERED]", "reason:", "Successful login");
+                console.trace();
                 location.replace("/admin.html");
             }
         });
