@@ -336,7 +336,7 @@
         const { data } = await supabase.auth.getSession();
 
         if (data.session) {
-            location.href = "/admin.html";
+            location.replace("/admin.html");
         }
 
         // ── Form submit ──
@@ -386,7 +386,7 @@
 
             // Success → go to admin
             if (!error) {
-                location.href = "/admin.html";
+                location.replace("/admin.html");
             }
         });
 

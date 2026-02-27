@@ -743,16 +743,22 @@
             const { data } = await supabase.auth.getSession();
             const user = data.session?.user;
 
-            console.log("[Admin] session:", user?.email);
+            console.log("[Admin] session email:", user?.email);
 
-            if (!user) {
-                location.href = "/admin-login.html";
+            if (!user || typeof user.email !== "string") {
+                console.log("[Admin] ACCESS DENIED (no user)");
+                location.replace("/admin-login.html");
                 return;
             }
 
-            if (user.email !== ADMIN_EMAIL) {
+            const currentEmail = user.email.toLowerCase().trim();
+            const adminEmail = ADMIN_EMAIL.toLowerCase().trim();
+            console.log("[Admin] compare emails:", currentEmail, adminEmail);
+
+            if (currentEmail !== adminEmail) {
+                console.log("[Admin] ACCESS DENIED (wrong email)");
                 await supabase.auth.signOut();
-                location.href = "/";
+                location.replace("/");
                 return;
             }
 
@@ -772,7 +778,7 @@
         document.getElementById('logout-btn').addEventListener('click', async () => {
             isAdmin = false;
             await supabase.auth.signOut();
-            location.href = "/admin-login.html";
+            location.replace("/admin-login.html");
         });
 
 
@@ -984,9 +990,9 @@
 
             // Re-check session for extra safety
             const { data: { session: currentSession } } = await supabase.auth.getSession();
-            if (!currentSession) {
-                console.warn('[Admin] loadProducts: no active session, redirecting...');
-                window.location.replace('admin-login.html');
+            if (!currentSession || !isAdmin) {
+                console.warn('[Admin] loadProducts: no active session or not admin, redirecting...');
+                location.replace('/admin-login.html');
                 return;
             }
 
