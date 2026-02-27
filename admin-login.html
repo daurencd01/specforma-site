@@ -331,30 +331,12 @@
     </div>
 
     <script type="module">
-        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        import { supabase } from "./js/supabaseClient.js";
 
-        const SUPABASE_URL = "https://hdkdxtotusteqqbvhloi.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj";
-        const AUTH_STORAGE_KEY = "specforma-admin-auth";
+        const { data } = await supabase.auth.getSession();
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true,
-                storageKey: AUTH_STORAGE_KEY
-            }
-        });
-
-        // Debug: check existing session on load
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        console.log('[Auth] Existing session on login page:', existingSession?.user?.email ?? 'none');
-
-        // If already logged in with correct email — skip login page
-        const ADMIN_EMAIL = "mmgeapro@gmail.com";
-        if (existingSession?.user?.email === ADMIN_EMAIL) {
-            console.log('[Auth] Already authenticated, redirecting to admin...');
-            window.location.replace('admin.html');
+        if (data.session) {
+            location.href = "/admin.html";
         }
 
         // ── Form submit ──
@@ -403,7 +385,9 @@
             }
 
             // Success → go to admin
-            window.location.replace('admin.html');
+            if (!error) {
+                location.href = "/admin.html";
+            }
         });
 
         // Allow Enter key on password field

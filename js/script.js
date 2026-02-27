@@ -1,21 +1,22 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { supabase } from "./supabaseClient.js";
 
-const supabaseUrl = "https://hdkdxtotusteqqbvhloi.supabase.co";
-const supabaseKey = "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj";
+const isAdminPage = location.pathname.includes("admin");
 
-window.supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'specforma-admin-auth'
-  }
-});
+if (isAdminPage) {
+  console.log("[Global] Admin page detected — skipping public auth");
+} else {
+  initPublicAuth();
+}
 
-// Debug: log current session state on every page load
-window.supabase.auth.getSession().then(({ data: { session } }) => {
-  console.log('[Auth] session:', session?.user?.email ?? 'none');
-});
+function initPublicAuth() {
+  window.supabase = supabase;
+
+  // Debug: log current session state on every page load
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('[Auth] session:', session?.user?.email ?? 'none');
+  });
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   /* --- Header Scroll Effect --- */

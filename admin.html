@@ -731,20 +731,7 @@
     </div>
 
     <script type="module">
-        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-        const SUPABASE_URL = "https://hdkdxtotusteqqbvhloi.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj";
-        const AUTH_STORAGE_KEY = "specforma-admin-auth";
-
-        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true,
-                storageKey: AUTH_STORAGE_KEY
-            }
-        });
+        import { supabase } from "./js/supabaseClient.js";
 
         // ── Module-level flags ──
         const BUCKET = "products";
@@ -752,52 +739,40 @@
         let isAdmin = false;
 
         // ── Auth Guard ──
-        async function initAdminPage() {
-            const { data: { session } } = await supabase.auth.getSession();
+        async function checkAdmin() {
+            const { data } = await supabase.auth.getSession();
+            const user = data.session?.user;
 
-            if (!session || !session.user) {
-                console.log('[Admin] No session');
-                window.location.replace('admin-login.html');
+            console.log("[Admin] session:", user?.email);
+
+            if (!user) {
+                location.href = "/admin-login.html";
                 return;
             }
 
-            const userEmail = session.user.email?.trim()?.toLowerCase();
-            console.log('[Admin] Logged user:', userEmail);
-
-            if (userEmail !== ADMIN_EMAIL.toLowerCase()) {
-                console.warn('[Admin] Access denied for:', userEmail);
+            if (user.email !== ADMIN_EMAIL) {
                 await supabase.auth.signOut();
-                window.location.replace('/');
+                location.href = "/";
                 return;
             }
 
-            console.log('[Admin] Access granted ✅');
+            console.log("[Admin] ACCESS GRANTED");
             isAdmin = true;
 
             document.getElementById('page-content').style.display = 'block';
             const emailEl = document.getElementById('admin-email');
-            if (emailEl) emailEl.textContent = session.user.email;
+            if (emailEl) emailEl.textContent = user.email;
 
             loadProducts();
         }
 
-        // Run guard — wait for Supabase to restore session from storage first
-        // TOKEN_REFRESHED / SIGNED_IN fires before initAdminPage reads via getSession
-        supabase.auth.onAuthStateChange((event) => {
-            if (event === 'SIGNED_OUT') {
-                window.location.replace('admin-login.html');
-            }
-        });
-
-        // Small delay to let Supabase restore localStorage session before getSession()
-        await new Promise(r => setTimeout(r, 100));
-        await initAdminPage();
+        checkAdmin();
 
         // ── Logout ──
         document.getElementById('logout-btn').addEventListener('click', async () => {
             isAdmin = false;
             await supabase.auth.signOut();
-            window.location.replace('admin-login.html');
+            location.href = "/admin-login.html";
         });
 
 
