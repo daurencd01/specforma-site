@@ -741,34 +741,35 @@
         const BUCKET = "products";
         let isAdmin = false;
 
-        // ── Auth Guard: check session + role before showing anything ──
+        // ── Auth Guard: session + email whitelist ──
+        const ADMIN_EMAIL = "mmgeapro@gmail.com";
+
         const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
 
-        if (!session) {
-            // Not logged in at all
+        if (!user) {
+            // Not logged in
+            console.warn('[Admin] No session — redirecting to login.');
             window.location.replace('admin-login.html');
+        } else if (user.email !== ADMIN_EMAIL) {
+            // Logged in but wrong account
+            console.warn('[Admin] Access denied for:', user.email);
+            await supabase.auth.signOut();
+            window.location.replace('/');
         } else {
-            const role = session.user.user_metadata?.role;
+            // ✅ Correct admin email confirmed
+            isAdmin = true;
+            console.log('[Admin] Access granted for:', user.email);
 
-            if (role !== 'admin') {
-                // Logged in but NOT admin
-                console.warn('Access denied: user does not have admin role.');
-                await supabase.auth.signOut();
-                window.location.replace('/');
-            } else {
-                // ✅ Authenticated + admin role confirmed
-                isAdmin = true;
+            // Show page content
+            document.getElementById('page-content').style.display = 'block';
 
-                // Show page content
-                document.getElementById('page-content').style.display = 'block';
+            // Show admin email in topbar
+            const emailEl = document.getElementById('admin-email');
+            if (emailEl) emailEl.textContent = user.email;
 
-                // Show admin email in topbar
-                const emailEl = document.getElementById('admin-email');
-                if (emailEl) emailEl.textContent = session.user.email;
-
-                // Init page data
-                loadProducts();
-            }
+            // Init page data
+            loadProducts();
         }
 
         // ── Watch for session changes (e.g. token expiry) ──
