@@ -593,14 +593,80 @@ img {
     overflow: hidden;
 }
 
-.product-img-wrap img {
+.product-img-wrap img,
+.slides img {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out, transform 0.5s ease;
+    z-index: 1;
+}
+
+/* Base image state for backwards compatibility */
+.product-img-wrap>img:not(.active) {
+    opacity: 1;
+}
+
+.slides img.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+.product-slider {
+    touch-action: pan-y;
+}
+
+.slides {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.slide-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.85);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
+    color: var(--primary);
+}
+
+.product-slider:hover .slide-btn {
+    opacity: 1;
+}
+
+.slide-btn:hover {
+    background-color: white;
+}
+
+.slide-btn:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+.slide-btn.prev {
+    left: 10px;
+}
+
+.slide-btn.next {
+    right: 10px;
 }
 
 .product-badge {
@@ -614,11 +680,12 @@ img {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--primary);
-    z-index: 2;
+    z-index: 20;
     box-shadow: var(--shadow-sm);
 }
 
-.product-card:hover .product-img-wrap img {
+.product-card:hover .product-img-wrap>img,
+.product-card:hover .slides img.active {
     transform: scale(1.05);
 }
 
@@ -1154,6 +1221,11 @@ img {
 
         .category-card:hover .category-btn {
             transform: none;
+        }
+
+        .slide-btn {
+            opacity: 0.9;
+            background-color: rgba(255, 255, 255, 0.9);
         }
 
         .btn:hover,

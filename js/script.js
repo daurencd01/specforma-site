@@ -1,3 +1,10 @@
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const supabaseUrl = "https://hdkdxtotusteqqbvhloi.supabase.co";
+const supabaseKey = "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj";
+
+window.supabase = createClient(supabaseUrl, supabaseKey);
+
 document.addEventListener('DOMContentLoaded', () => {
   /* --- Header Scroll Effect --- */
   const header = document.querySelector('.header');
@@ -108,6 +115,73 @@ document.addEventListener('DOMContentLoaded', () => {
   if (yearEl) {
     yearEl.textContent = new Date().getFullYear();
   }
+
+  // Product Image Slider
+  const sliders = document.querySelectorAll('.product-slider');
+  sliders.forEach(slider => {
+    const slides = slider.querySelectorAll('.slides img');
+    const prevBtn = slider.querySelector('.slide-btn.prev');
+    const nextBtn = slider.querySelector('.slide-btn.next');
+    if (slides.length <= 1) {
+      if (prevBtn) prevBtn.style.display = 'none';
+      if (nextBtn) nextBtn.style.display = 'none';
+      return;
+    }
+
+    let currentIndex = 0;
+
+    const showSlide = (index) => {
+      slides.forEach(s => s.classList.remove('active'));
+      if (index >= slides.length) currentIndex = 0;
+      else if (index < 0) currentIndex = slides.length - 1;
+      else currentIndex = index;
+      slides[currentIndex].classList.add('active');
+    };
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        currentIndex--;
+        showSlide(currentIndex);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        currentIndex++;
+        showSlide(currentIndex);
+      });
+    }
+
+    // Touch Swipe Logic
+    let startX = 0;
+    let endX = 0;
+
+    slider.addEventListener('touchstart', (e) => {
+      startX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    slider.addEventListener('touchend', (e) => {
+      endX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, { passive: true });
+
+    const handleSwipe = () => {
+      const threshold = 40; // minimum swipe distance
+      if (startX - endX > threshold) {
+        // Swipe left -> Next image
+        currentIndex++;
+        showSlide(currentIndex);
+      } else if (endX - startX > threshold) {
+        // Swipe right -> Prev image
+        currentIndex--;
+        showSlide(currentIndex);
+      }
+    };
+  });
 
   // Initialize icons
   if (typeof lucide !== 'undefined') {
