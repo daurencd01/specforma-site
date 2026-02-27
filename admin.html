@@ -737,6 +737,10 @@
         const supabaseKey = "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj";
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        // ── Module-level flags (must be declared BEFORE the async auth guard) ──
+        const BUCKET = "products";
+        let isAdmin = false;
+
         // ── Auth Guard: check session + role before showing anything ──
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -781,10 +785,6 @@
             window.location.replace('admin-login.html');
         });
 
-        const BUCKET = "products";
-
-        // Module-level admin flag (set only after role verified above)
-        let isAdmin = false;
 
         // ── Toast ──
         function showToast(message, type = 'success') {
@@ -974,7 +974,31 @@
         async function loadProducts() {
             const listEl = document.getElementById('products-list');
             const countEl = document.getElementById('product-count');
-            listEl.innerHTML = '<div class="empty-list">Загрузка...</div>';
+
+            if (!listEl) {
+                console.error('[Admin] #products-list element not found in DOM');
+                return;
+            }
+
+            listEl.innerHTML = '<div class="empty-list">Загрузка товаров...</div>';
+            console.log('[Admin] loadProducts() started, isAdmin =', isAdmin);
+
+            // Verify Supabase client is ready
+            if (!supabase) {
+                console.error('[Admin] supabase client is undefined!');
+                listEl.innerHTML = '<div class="empty-list" style="color:var(--error)">Ошибка: Supabase не инициализирован</div>';
+                return;
+            }
+
+            // Re-check session for extra safety
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession) {
+                console.warn('[Admin] loadProducts: no active session, redirecting...');
+                window.location.replace('admin-login.html');
+                return;
+            }
+
+            console.log('[Admin] Fetching from table: products...');
 
             const { data, error } = await supabase
                 .from('products')
@@ -982,14 +1006,27 @@
                 .order('created_at', { ascending: false });
 
             if (error) {
-                listEl.innerHTML = `<div class="empty-list" style="color:var(--error)">Ошибка: ${error.message}</div>`;
+                console.error('[Admin] Supabase error fetching products:', error.code, error.message, error.details);
+
+                let hint = '';
+                if (error.code === '42P01') hint = ' (таблица "products" не существует — создайте её в Supabase)';
+                if (error.code === '42501') hint = ' (нет прав — проверьте RLS политики)';
+                if (error.message?.includes('permission denied')) hint = ' (permission denied — проверьте RLS)';
+                if (error.message?.includes('JWT')) hint = ' (ошибка токена — выйдите и войдите снова)';
+
+                listEl.innerHTML = `<div class="empty-list" style="color:var(--error); text-align:left; padding: 20px;">
+                    <strong>Ошибка загрузки товаров</strong><br>
+                    <code style="font-size:0.8rem; opacity:0.8;">${error.code}: ${error.message}${hint}</code>
+                </div>`;
                 return;
             }
 
-            countEl.textContent = data.length ? `${data.length} товаров` : '';
+            console.log('[Admin] Products fetched:', data?.length ?? 0, 'items');
 
-            if (!data.length) {
-                listEl.innerHTML = '<div class="empty-list">Товаров пока нет. Добавьте первый!</div>';
+            if (countEl) countEl.textContent = data.length ? `${data.length} товаров` : '';
+
+            if (!data || data.length === 0) {
+                listEl.innerHTML = '<div class="empty-list">Товары пока не добавлены.</div>';
                 return;
             }
 
@@ -1014,25 +1051,31 @@
                         <button class="btn-delete" data-id="${product.id}">🗑 Удалить</button>
                     </div>`;
 
+                // ── Delete button with role guard ──
                 item.querySelector('.btn-delete').addEventListener('click', async () => {
-                    // ── Role guard ──
                     if (!isAdmin) {
                         console.warn('Access denied: delete blocked — not admin.');
                         showToast('Доступ запрещён: недостаточно прав', 'error');
                         return;
                     }
                     if (!confirm(`Удалить "${product.name}"?`)) return;
-                    const { error } = await supabase.from('products').delete().eq('id', product.id);
-                    if (error) { showToast('Ошибка удаления: ' + error.message, 'error'); return; }
+                    const { error: delErr } = await supabase.from('products').delete().eq('id', product.id);
+                    if (delErr) {
+                        console.error('[Admin] Delete error:', delErr);
+                        showToast('Ошибка удаления: ' + delErr.message, 'error');
+                        return;
+                    }
                     showToast('Товар удалён', 'success');
                     item.remove();
                     const remaining = listEl.querySelectorAll('.product-list-item').length;
-                    countEl.textContent = remaining ? `${remaining} товаров` : '';
-                    if (!remaining) listEl.innerHTML = '<div class="empty-list">Товаров пока нет. Добавьте первый!</div>';
+                    if (countEl) countEl.textContent = remaining ? `${remaining} товаров` : '';
+                    if (!remaining) listEl.innerHTML = '<div class="empty-list">Товары пока не добавлены.</div>';
                 });
 
                 listEl.appendChild(item);
             });
+
+            console.log('[Admin] Products rendered successfully.');
         }
 
         // loadProducts() is called inside the auth session check above.
