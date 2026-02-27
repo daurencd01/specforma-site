@@ -746,53 +746,58 @@
             }
         });
 
-        // ── Module-level flags (must be declared BEFORE the async auth guard) ──
+        // ── Module-level flags ──
         const BUCKET = "products";
-        let isAdmin = false;
-
-        // ── Auth Guard: session + email whitelist ──
         const ADMIN_EMAIL = "mmgeapro@gmail.com";
+        let isAdmin = false;
+        let checkedAuth = false; // ensure init runs only once
 
-        const { data: { session } } = await supabase.auth.getSession();
-        const user = session?.user;
+        // ── Auth Guard via onAuthStateChange ──
+        // Fires immediately with the restored session (including from localStorage),
+        // so it correctly handles async session restoration on Vercel/hosted.
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('[Auth event]', event, session?.user?.email ?? 'none');
 
-        console.log('[Auth] session on admin.html:', user?.email ?? 'none');
+            if (!session) {
+                // No session — but give Supabase one tick to restore before redirecting
+                // (handles race between INITIAL_SESSION and page guard)
+                if (!checkedAuth) {
+                    await new Promise(r => setTimeout(r, 150));
+                    const { data: { session: retry } } = await supabase.auth.getSession();
+                    if (!retry) {
+                        console.warn('[Admin] No session — redirecting to login.');
+                        window.location.replace('admin-login.html');
+                    }
+                }
+                return;
+            }
 
-        if (!user) {
-            // Not logged in
-            console.warn('[Admin] No session — redirecting to login.');
-            window.location.replace('admin-login.html');
-        } else if (user.email !== ADMIN_EMAIL) {
-            // Logged in but wrong account
-            console.warn('[Admin] Access denied for:', user.email);
-            await supabase.auth.signOut();
-            window.location.replace('/');
-        } else {
-            // ✅ Correct admin email confirmed
-            isAdmin = true;
-            console.log('[Admin] Access granted for:', user.email);
+            const userEmail = session.user.email;
 
-            // Show page content
-            document.getElementById('page-content').style.display = 'block';
+            if (userEmail !== ADMIN_EMAIL) {
+                console.warn('[Admin] Access denied for:', userEmail);
+                await supabase.auth.signOut();
+                window.location.replace('/');
+                return;
+            }
 
-            // Show admin email in topbar
-            const emailEl = document.getElementById('admin-email');
-            if (emailEl) emailEl.textContent = user.email;
+            if (!checkedAuth) {
+                checkedAuth = true;
+                isAdmin = true;
+                console.log('[Admin] Access granted for:', userEmail);
 
-            // Init page data
-            loadProducts();
-        }
+                document.getElementById('page-content').style.display = 'block';
+                const emailEl = document.getElementById('admin-email');
+                if (emailEl) emailEl.textContent = userEmail;
 
-        // ── Watch for session changes (e.g. token expiry) ──
-        supabase.auth.onAuthStateChange((event, newSession) => {
-            if (event === 'SIGNED_OUT' || !newSession) {
-                window.location.replace('admin-login.html');
+                loadProducts();
             }
         });
 
         // ── Logout ──
         document.getElementById('logout-btn').addEventListener('click', async () => {
             isAdmin = false;
+            checkedAuth = false;
             await supabase.auth.signOut();
             window.location.replace('admin-login.html');
         });
