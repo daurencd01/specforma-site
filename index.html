@@ -138,54 +138,8 @@
     <div class="container">
       <h2 class="section-title animate-on-scroll">Всё необходимое в <span>одном месте</span></h2>
 
-      <div class="categories-grid">
-        <a href="catalog.html?cat=clothes" class="category-card animate-on-scroll">
-          <img src="https://images.unsplash.com/photo-1541888086225-ee89dd5da9ad?auto=format&fit=crop&q=80&w=800"
-            alt="Рабочая одежда" class="category-img">
-          <div class="category-overlay"></div>
-          <div class="category-content">
-            <h3 class="category-title">Рабочая одежда</h3>
-            <div class="category-btn">
-              <i data-lucide="arrow-right"></i>
-            </div>
-          </div>
-        </a>
-
-        <a href="catalog.html?cat=shoes" class="category-card animate-on-scroll" style="transition-delay: 100ms;">
-          <img src="https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800"
-            alt="Спецобувь" class="category-img">
-          <div class="category-overlay"></div>
-          <div class="category-content">
-            <h3 class="category-title">Спецобувь</h3>
-            <div class="category-btn">
-              <i data-lucide="arrow-right"></i>
-            </div>
-          </div>
-        </a>
-
-        <a href="catalog.html?cat=siz" class="category-card animate-on-scroll">
-          <img src="https://images.unsplash.com/photo-1565516087856-787bc12d28f8?auto=format&fit=crop&q=80&w=800"
-            alt="Средства защиты" class="category-img">
-          <div class="category-overlay"></div>
-          <div class="category-content">
-            <h3 class="category-title" style="white-space: pre-wrap;">Зимняя спецодежда</h3>
-            <div class="category-btn">
-              <i data-lucide="arrow-right"></i>
-            </div>
-          </div>
-        </a>
-
-        <a href="catalog.html?cat=accessories" class="category-card animate-on-scroll" style="transition-delay: 100ms;">
-          <img src="https://images.unsplash.com/photo-1588693892040-af46f2fc27f0?auto=format&fit=crop&q=80&w=800"
-            alt="Аксессуары" class="category-img">
-          <div class="category-overlay"></div>
-          <div class="category-content">
-            <h3 class="category-title">Аксессуары</h3>
-            <div class="category-btn">
-              <i data-lucide="arrow-right"></i>
-            </div>
-          </div>
-        </a>
+      <div id="homepage-categories" class="categories-grid">
+        <!-- Dynamic categories loaded from Supabase -->
       </div>
     </div>
   </section>
@@ -301,6 +255,7 @@
     </div>
   </footer>
 
+  <script type="module" src="./js/homepageCategories.js"></script>
   <script type="module" src="./js/homepageProducts.js"></script>
   <script type="module" src="js/script.js"></script>
 </body>
