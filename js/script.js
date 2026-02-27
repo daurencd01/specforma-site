@@ -108,10 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (yearEl) {
     yearEl.textContent = new Date().getFullYear();
   }
+
+  // Initialize icons
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  } else {
+    // Fallback if not loaded yet
+    window.addEventListener('load', () => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+  }
 });
-
-// Initialize icons (after DOMContentLoaded, or right after script load since it's deferred)
-if (typeof lucide !== 'undefined') {
-  lucide.createIcons();
-}
-

@@ -58,11 +58,15 @@ html {
     background-color: var(--bg-main);
     color: var(--text-main);
     font-weight: 400;
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 body {
     line-height: 1.65;
+    max-width: 100vw;
     overflow-x: hidden;
+    position: relative;
 }
 
 a {
@@ -85,6 +89,11 @@ h6 {
     line-height: 1.3;
     font-weight: 600;
     letter-spacing: -0.02em;
+    word-break: break-word;
+}
+
+p {
+    word-break: break-word;
 }
 
 img {
@@ -169,7 +178,7 @@ img {
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000;
+    z-index: 999;
     background-color: var(--primary);
     transition: var(--transition);
     padding: 20px 0;
@@ -1032,7 +1041,7 @@ img {
         max-width: 320px;
         height: 100vh;
         background-color: var(--bg-secondary);
-        z-index: 1001;
+        z-index: 1050;
         transition: transform 0.4s ease;
         padding: 80px 24px 24px;
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
@@ -1088,7 +1097,7 @@ img {
         width: 100%;
         height: 100vh;
         background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
+        z-index: 1040;
         opacity: 0;
         visibility: hidden;
         transition: var(--transition);
@@ -1111,6 +1120,7 @@ img {
     .cta-btn {
         width: 100%;
         padding: 16px 20px;
+        box-sizing: border-box;
     }
 
     /* Touch target improvements */
