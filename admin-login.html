@@ -333,14 +333,27 @@
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-        const supabase = createClient(
-            "https://hdkdxtotusteqqbvhloi.supabase.co",
-            "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj"
-        );
+        const SUPABASE_URL = "https://hdkdxtotusteqqbvhloi.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj";
+        const AUTH_STORAGE_KEY = "specforma-admin-auth";
 
-        // If already logged in — skip login page
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+                storageKey: AUTH_STORAGE_KEY
+            }
+        });
+
+        // Debug: check existing session on load
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        console.log('[Auth] Existing session on login page:', existingSession?.user?.email ?? 'none');
+
+        // If already logged in with correct email — skip login page
+        const ADMIN_EMAIL = "mmgeapro@gmail.com";
+        if (existingSession?.user?.email === ADMIN_EMAIL) {
+            console.log('[Auth] Already authenticated, redirecting to admin...');
             window.location.replace('admin.html');
         }
 

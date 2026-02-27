@@ -3,7 +3,19 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = "https://hdkdxtotusteqqbvhloi.supabase.co";
 const supabaseKey = "sb_publishable_9pKEOQ3uBNK-XK4dxk8SlA_1RQrROSj";
 
-window.supabase = createClient(supabaseUrl, supabaseKey);
+window.supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'specforma-admin-auth'
+  }
+});
+
+// Debug: log current session state on every page load
+window.supabase.auth.getSession().then(({ data: { session } }) => {
+  console.log('[Auth] session:', session?.user?.email ?? 'none');
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   /* --- Header Scroll Effect --- */
