@@ -12,9 +12,3 @@ export const supabase = createClient(
         }
     }
 );
-
-console.log("[AUTH STEP]", {
-    pathname: location.pathname,
-    step: "supabaseClient init",
-    time: new Date().toISOString()
-});

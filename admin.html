@@ -733,68 +733,67 @@
     <script type="module">
         import { supabase } from "./js/supabaseClient.js";
 
-        // ── Module-level flags ──
+        // ── Constants ──
         const BUCKET = "products";
         const ADMIN_EMAIL = "mmegaprof@gmail.com";
         let isAdmin = false;
+        let authHandled = false; // Prevent double-firing
 
-        // ── Auth Guard ──
-        async function checkAdmin() {
-            const { data } = await supabase.auth.getSession();
-            const session = data.session;
-            const user = session?.user;
+        // ── Auth Guard via onAuthStateChange ──
+        // INITIAL_SESSION fires once when Supabase has finished
+        // restoring the session from localStorage — safe on Vercel/CDN.
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log("[AUTH EVENT]", event, session?.user?.email ?? "no session");
 
-            console.log("[AUTH STEP]", {
-                step: "admin.html checkAdmin",
-                pathname: location.pathname,
-                session: session,
-                email: user?.email,
-                isAdmin,
-                time: new Date().toISOString()
-            });
-            console.log("[Admin] session email:", user?.email);
-
-            if (!user || typeof user.email !== "string") {
-                console.log("[Admin] ACCESS DENIED (no user)");
-                console.warn("[REDIRECT TRIGGERED]", "reason:", "No valid user session on admin.html");
-                console.trace();
+            // Only act on the first INITIAL_SESSION or SIGNED_IN event.
+            // SIGNED_OUT is also handled to redirect away.
+            if (event === "SIGNED_OUT") {
+                console.warn("[REDIRECT TRIGGERED]", "reason: SIGNED_OUT");
                 location.replace("/admin-login.html");
                 return;
             }
 
-            const currentEmail = user.email?.toLowerCase().trim();
-            const adminEmail = ADMIN_EMAIL.toLowerCase().trim();
+            if (authHandled) return;
 
-            console.log("[Admin] compare:", currentEmail, adminEmail);
+            if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+                authHandled = true;
 
-            if (currentEmail !== adminEmail) {
-                console.warn("[Admin] ACCESS DENIED:", currentEmail);
-                await supabase.auth.signOut();
-                console.warn("[REDIRECT TRIGGERED]", "reason:", "Email whitelist mismatch on admin.html");
-                console.trace();
-                location.replace("/");
-                return;
+                const user = session?.user;
+                console.log("[AUTH SESSION RESTORED]", { event, email: user?.email });
+
+                if (!user || typeof user.email !== "string") {
+                    console.warn("[REDIRECT TRIGGERED]", "reason: no user after INITIAL_SESSION");
+                    location.replace("/admin-login.html");
+                    return;
+                }
+
+                const currentEmail = user.email.toLowerCase().trim();
+                const adminEmail = ADMIN_EMAIL.toLowerCase().trim();
+                console.log("[ADMIN CHECK]", { currentEmail, adminEmail, match: currentEmail === adminEmail });
+
+                if (currentEmail !== adminEmail) {
+                    console.warn("[REDIRECT TRIGGERED]", "reason: email mismatch", currentEmail);
+                    supabase.auth.signOut();          // async — fine, redirect follows immediately
+                    location.replace("/");
+                    return;
+                }
+
+                // ── Access granted ──
+                console.log("[ADMIN CHECK] ACCESS GRANTED ✅");
+                isAdmin = true;
+
+                document.getElementById("page-content").style.display = "block";
+                const emailEl = document.getElementById("admin-email");
+                if (emailEl) emailEl.textContent = user.email;
+
+                loadProducts();
             }
-
-            console.log("[Admin] ACCESS GRANTED");
-            isAdmin = true;
-
-            document.getElementById('page-content').style.display = 'block';
-            const emailEl = document.getElementById('admin-email');
-            if (emailEl) emailEl.textContent = user.email;
-
-            loadProducts();
-        }
-
-        checkAdmin();
+        });
 
         // ── Logout ──
-        document.getElementById('logout-btn').addEventListener('click', async () => {
+        document.getElementById("logout-btn").addEventListener("click", async () => {
             isAdmin = false;
-            await supabase.auth.signOut();
-            console.warn("[REDIRECT TRIGGERED]", "reason:", "Explicit logout on admin.html");
-            console.trace();
-            location.replace("/admin-login.html");
+            await supabase.auth.signOut(); // triggers SIGNED_OUT → redirect above
         });
 
 

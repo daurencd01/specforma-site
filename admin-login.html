@@ -333,78 +333,79 @@
     <script type="module">
         import { supabase } from "./js/supabaseClient.js";
 
-        const { data } = await supabase.auth.getSession();
+        const ADMIN_EMAIL = "mmegaprof@gmail.com";
+        let loginHandled = false;
 
-        console.log("[AUTH STEP]", {
-            step: "admin-login init",
-            pathname: location.pathname,
-            session: data?.session,
-            email: data?.session?.user?.email,
-            time: new Date().toISOString()
+        // ── If session already exists, skip login page ──
+        // Use onAuthStateChange so we wait for localStorage restore (INITIAL_SESSION).
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log("[AUTH EVENT]", event, session?.user?.email ?? "no session");
+
+            if (loginHandled) return;
+
+            if (event === "INITIAL_SESSION") {
+                if (session?.user) {
+                    loginHandled = true;
+                    console.warn("[REDIRECT TRIGGERED]", "reason: already authenticated on login page");
+                    location.replace("/admin.html");
+                }
+                // No session → stay on login page, show form
+            }
         });
 
-        if (data.session) {
-            console.warn("[REDIRECT TRIGGERED]", "reason:", "Session exists on admin-login");
-            console.trace();
-            location.replace("/admin.html");
-        }
-
         // ── Form submit ──
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const errorEl = document.getElementById('error-msg');
-            const btn = document.getElementById('login-btn');
-            const spinner = document.getElementById('spinner');
-            const icon = document.getElementById('login-icon');
-            const text = document.getElementById('login-text');
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const errorEl = document.getElementById("error-msg");
+            const btn = document.getElementById("login-btn");
+            const spinner = document.getElementById("spinner");
+            const icon = document.getElementById("login-icon");
+            const text = document.getElementById("login-text");
 
-            // Hide previous error
-            errorEl.classList.remove('show');
+            errorEl.classList.remove("show");
 
             if (!email || !password) {
-                document.getElementById('error-text').textContent = 'Введите email и пароль';
-                errorEl.classList.add('show');
+                document.getElementById("error-text").textContent = "Введите email и пароль";
+                errorEl.classList.add("show");
                 return;
             }
 
             // Loading state
             btn.disabled = true;
-            spinner.style.display = 'block';
-            icon.style.display = 'none';
-            text.textContent = 'Вход...';
+            spinner.style.display = "block";
+            icon.style.display = "none";
+            text.textContent = "Вход...";
 
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
             if (error) {
                 btn.disabled = false;
-                spinner.style.display = 'none';
-                icon.style.display = 'block';
-                text.textContent = 'Войти';
+                spinner.style.display = "none";
+                icon.style.display = "block";
+                text.textContent = "Войти";
 
                 const msgs = {
-                    'Invalid login credentials': 'Неверный email или пароль',
-                    'Email not confirmed': 'Email не подтверждён',
-                    'Too many requests': 'Слишком много попыток. Подождите немного.',
+                    "Invalid login credentials": "Неверный email или пароль",
+                    "Email not confirmed": "Email не подтверждён",
+                    "Too many requests": "Слишком много попыток. Подождите немного.",
                 };
-                document.getElementById('error-text').textContent = msgs[error.message] || error.message;
-                errorEl.classList.add('show');
+                document.getElementById("error-text").textContent = msgs[error.message] || error.message;
+                errorEl.classList.add("show");
                 return;
             }
 
-            // Success → go to admin
-            if (!error) {
-                console.warn("[REDIRECT TRIGGERED]", "reason:", "Successful login");
-                console.trace();
-                location.replace("/admin.html");
-            }
+            // Success — session is now stored; navigate to admin
+            loginHandled = true;
+            console.warn("[REDIRECT TRIGGERED]", "reason: successful login");
+            location.replace("/admin.html");
         });
 
         // Allow Enter key on password field
-        document.getElementById('password').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') document.getElementById('login-form').requestSubmit();
+        document.getElementById("password").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") document.getElementById("login-form").requestSubmit();
         });
     </script>
 
