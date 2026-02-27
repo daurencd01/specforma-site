@@ -93,5 +93,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     });
+
+    // Quick URL-based filter
+    const urlParams = new URLSearchParams(window.location.search);
+    const cat = urlParams.get('cat');
+    if (cat) {
+      const btn = document.querySelector(`.filter-btn[data-filter="${cat}"]`);
+      if (btn) btn.click();
+    }
+  }
+
+  // Set current year
+  const yearEl = document.getElementById('year');
+  if (yearEl) {
+    yearEl.textContent = new Date().getFullYear();
   }
 });
+
+// Initialize icons (after DOMContentLoaded, or right after script load since it's deferred)
+if (typeof lucide !== 'undefined') {
+  lucide.createIcons();
+}
+
