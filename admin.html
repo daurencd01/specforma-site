@@ -750,57 +750,57 @@
         const BUCKET = "products";
         const ADMIN_EMAIL = "mmgeapro@gmail.com";
         let isAdmin = false;
-        let checkedAuth = false; // ensure init runs only once
 
-        // ── Auth Guard via onAuthStateChange ──
-        // Fires immediately with the restored session (including from localStorage),
-        // so it correctly handles async session restoration on Vercel/hosted.
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('[Auth event]', event, session?.user?.email ?? 'none');
+        // ── Auth Guard ──
+        async function initAdminPage() {
+            const { data: { session } } = await supabase.auth.getSession();
 
-            if (!session) {
-                // No session — but give Supabase one tick to restore before redirecting
-                // (handles race between INITIAL_SESSION and page guard)
-                if (!checkedAuth) {
-                    await new Promise(r => setTimeout(r, 150));
-                    const { data: { session: retry } } = await supabase.auth.getSession();
-                    if (!retry) {
-                        console.warn('[Admin] No session — redirecting to login.');
-                        window.location.replace('admin-login.html');
-                    }
-                }
+            if (!session || !session.user) {
+                console.log('[Admin] No session');
+                window.location.replace('admin-login.html');
                 return;
             }
 
-            const userEmail = session.user.email;
+            const userEmail = session.user.email?.trim()?.toLowerCase();
+            console.log('[Admin] Logged user:', userEmail);
 
-            if (userEmail !== ADMIN_EMAIL) {
+            if (userEmail !== ADMIN_EMAIL.toLowerCase()) {
                 console.warn('[Admin] Access denied for:', userEmail);
                 await supabase.auth.signOut();
                 window.location.replace('/');
                 return;
             }
 
-            if (!checkedAuth) {
-                checkedAuth = true;
-                isAdmin = true;
-                console.log('[Admin] Access granted for:', userEmail);
+            console.log('[Admin] Access granted ✅');
+            isAdmin = true;
 
-                document.getElementById('page-content').style.display = 'block';
-                const emailEl = document.getElementById('admin-email');
-                if (emailEl) emailEl.textContent = userEmail;
+            document.getElementById('page-content').style.display = 'block';
+            const emailEl = document.getElementById('admin-email');
+            if (emailEl) emailEl.textContent = session.user.email;
 
-                loadProducts();
+            loadProducts();
+        }
+
+        // Run guard — wait for Supabase to restore session from storage first
+        // TOKEN_REFRESHED / SIGNED_IN fires before initAdminPage reads via getSession
+        supabase.auth.onAuthStateChange((event) => {
+            if (event === 'SIGNED_OUT') {
+                window.location.replace('admin-login.html');
             }
         });
+
+        // Small delay to let Supabase restore localStorage session before getSession()
+        await new Promise(r => setTimeout(r, 100));
+        await initAdminPage();
 
         // ── Logout ──
         document.getElementById('logout-btn').addEventListener('click', async () => {
             isAdmin = false;
-            checkedAuth = false;
             await supabase.auth.signOut();
             window.location.replace('admin-login.html');
         });
+
+
 
 
         // ── Toast ──
