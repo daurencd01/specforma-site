@@ -94,8 +94,37 @@
                 <button class="filter-btn" data-filter="accessories">Аксессуары</button>
             </div>
 
-            <!-- Products Grid -->
-            <div class="products-grid">
+            <!-- Products Grid: Dynamic from Supabase -->
+            <div id="products-container" class="products-grid">
+                <!-- Skeleton Loader (shown while Supabase loads) -->
+                <div class="product-card skeleton-card">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="product-info">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-desc"></div>
+                        <div class="skeleton skeleton-price"></div>
+                    </div>
+                </div>
+                <div class="product-card skeleton-card">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="product-info">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-desc"></div>
+                        <div class="skeleton skeleton-price"></div>
+                    </div>
+                </div>
+                <div class="product-card skeleton-card">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="product-info">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-desc"></div>
+                        <div class="skeleton skeleton-price"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Static Products (fallback / backup) - shown if Supabase returns no data -->
+            <div id="static-products" class="products-grid" style="display:none;">
 
                 <!-- Product 1 -->
                 <div class="product-card animate-on-scroll" data-category="clothes">
@@ -264,7 +293,9 @@
                     </div>
                 </div>
 
-            </div>
+            </div><!-- /static-products -->
+
+        </div>
         </div>
     </section>
 
