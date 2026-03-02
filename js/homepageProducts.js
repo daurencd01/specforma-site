@@ -1,18 +1,13 @@
 // js/homepageProducts.js
-// Loads and realtime-syncs the latest 4 products on index.html.
-// Does NOT redirect, does NOT touch auth logic.
+// Загружает "Популярные товары" (только с badge) на index.html.
+// Realtime-синхронизация: новый badge → сразу появляется на главной.
+// Не касается auth, admin.html, структуры БД.
 
 import { supabase } from "./supabaseClient.js";
+import { getCategoryLabel } from "./categoryMap.js";
 
 const FALLBACK_IMG =
     "https://images.unsplash.com/photo-1541888086225-ee89dd5da9ad?auto=format&fit=crop&q=80&w=600";
-
-const CAT_LABELS = {
-    clothes: "Спецодежда",
-    siz: "Зимняя",
-    shoes: "Спецобувь",
-    accessories: "Аксессуары",
-};
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -27,12 +22,25 @@ function renderHomepageProducts(products) {
     const container = document.getElementById("homepage-products");
     if (!container) return;
 
+    // Пустое состояние — никакого пустого блока
     if (!products || products.length === 0) {
         container.innerHTML = `
-      <p style="color:var(--text-muted);grid-column:1/-1;
-                text-align:center;padding:40px 0">
-        Товары ещё не добавлены. Следите за обновлениями!
-      </p>`;
+      <div class="empty-products" style="
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted, #64748b);
+        font-size: 1rem;
+        line-height: 1.6;
+      ">
+        <p style="margin: 0 0 8px; font-size: 1.1rem; font-weight: 600;">
+          Популярные товары скоро появятся
+        </p>
+        <p style="margin: 0;">
+          Смотрите весь ассортимент в <a href="catalog.html"
+            style="color: var(--accent, #f97316); text-decoration: none;">каталоге</a>
+        </p>
+      </div>`;
         return;
     }
 
@@ -44,9 +52,14 @@ function renderHomepageProducts(products) {
         const price = p.price
             ? `${Number(p.price).toLocaleString("ru")} ₸`
             : "По запросу";
-        const cat = CAT_LABELS[p.category] || p.category || "";
+        const cat = getCategoryLabel(p.category);
         const name = p.name || "Товар";
         const waText = encodeURIComponent(`Здравствуйте, интересует ${name}`);
+
+        // Badge — отображаем если задан
+        const badgeHtml = p.badge
+            ? `<span class="product-badge">${p.badge}</span>`
+            : "";
 
         const card = document.createElement("div");
         card.className = "product-card animate-on-scroll";
@@ -54,6 +67,7 @@ function renderHomepageProducts(products) {
 
         card.innerHTML = `
       <div class="product-img-wrap">
+        ${badgeHtml}
         <img src="${thumb}" alt="${name}" loading="lazy"
              onerror="this.src='${FALLBACK_IMG}'">
       </div>
@@ -86,16 +100,35 @@ function renderHomepageProducts(products) {
     });
 
     if (typeof lucide !== "undefined") lucide.createIcons();
+
+    // Запускаем IntersectionObserver для карточек
+    document.querySelectorAll("#homepage-products .animate-on-scroll").forEach(el => {
+        productObserver.observe(el);
+    });
 }
+
+// ── Scroll animation observer ─────────────────────────────────
+
+const productObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            productObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1 });
 
 // ── Fetch ────────────────────────────────────────────────────
 
 async function loadHomepageProducts() {
-    console.log("[Homepage] Loading products from Supabase...");
+    console.log("[Homepage] Loading popular products (badge only)...");
     try {
         const { data, error } = await supabase
             .from("products")
-            .select("id, name, category, price, images, created_at")
+            .select("id, name, category, price, images, badge, created_at")
+            .eq("hidden", false)        // не показываем скрытые
+            .not("badge", "is", null)   // только с badge
+            .neq("badge", "")           // исключаем пустую строку
             .order("created_at", { ascending: false })
             .limit(4);
 
@@ -105,10 +138,9 @@ async function loadHomepageProducts() {
             return;
         }
 
-        console.log("[Homepage] Loaded:", data?.length ?? 0, "products");
+        console.log("[Homepage] Popular products loaded:", data?.length ?? 0);
         renderHomepageProducts(data);
     } catch (err) {
-        // Never crash the page — show empty state
         console.warn("[Homepage] Unexpected error:", err);
         renderHomepageProducts(null);
     }
@@ -120,32 +152,30 @@ let productsChannel = null;
 
 function subscribeToProducts() {
     try {
-        // Prevent duplicate listeners
         if (productsChannel) {
             supabase.removeChannel(productsChannel);
             productsChannel = null;
         }
 
         productsChannel = supabase
-            .channel("products-realtime")
+            .channel("homepage-products-realtime")
             .on(
                 "postgres_changes",
                 { event: "*", schema: "public", table: "products" },
                 async () => {
-                    console.log("[Realtime] Update Triggered — reloading products...");
+                    console.log("[Realtime] Products change — reloading homepage products...");
                     await loadHomepageProducts();
                 }
             )
             .subscribe((status) => {
                 if (status === "SUBSCRIBED") {
-                    console.log("[Realtime] Connected ✅");
+                    console.log("[Realtime] Homepage products connected ✅");
                 } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
                     console.warn("[Realtime] Channel error:", status, "— retry in 5s");
                     setTimeout(subscribeToProducts, 5000);
                 }
             });
     } catch (err) {
-        // Fail silently — static page still works without realtime
         console.warn("[Realtime] Failed to subscribe:", err);
     }
 }
