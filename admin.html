@@ -1104,20 +1104,25 @@
         // loadProducts() is called inside the auth session check above.
 
         // ── Load Admin Category Options ──
-        // DEFAULT_CATEGORIES — гарантированный набор slug,
-        // который всегда присутствует в select (даже если БД пустая).
+        // DEFAULT_CATEGORIES — гарантированный набор slug (используется ТОЛЬКО
+        // если у БД нет соответствующих категорий по label).
         const DEFAULT_CATEGORIES = [
             'clothes', 'siz', 'shoes', 'accessories', 'welding'
         ];
 
-        // Флаг: не перезаписывать select если загрузка уже в процессе
-        let _categoriesLoading = false;
+        // Постоянный guard — loadAdminCategories() выполняется ровно ОДИН РАЗ.
+        // В отличие от _categoriesLoading, этот флаг НИКОГДА не сбрасывается.
+        let adminCategoriesLoaded = false;
 
         async function loadAdminCategories() {
+            if (adminCategoriesLoaded) {
+                console.log('[Admin] Categories already loaded — skip');
+                return;
+            }
+            adminCategoriesLoaded = true;
+
             const select = document.getElementById('category');
             if (!select) return;
-            if (_categoriesLoading) return; // предотвращаем параллельный двойной вызов
-            _categoriesLoading = true;
 
             console.log('[Admin] Loading categories for select...');
             try {
@@ -1125,7 +1130,11 @@
                     .from('products')
                     .select('category');
 
-                // Slug из БД (дедуплицированные)
+                if (error) {
+                    console.warn('[Admin] Categories load error:', error.message, '— using defaults');
+                }
+
+                // Slug-и из БД (уникальные, пустые отфильтрованы)
                 const fromDb = error ? [] : [
                     ...new Set(
                         (data ?? [])
@@ -1134,46 +1143,60 @@
                     )
                 ];
 
-                if (error) {
-                    console.warn('[Admin] Categories load error:', error.message, '— using defaults');
+                // ── Дедупликация по LABEL, а не по slug ──────────────────────
+                // Проблема: в БД slug="Сварочная форма", в DEFAULT slug="welding",
+                // но getCatLabel() для обоих даёт "Сварочная форма".
+                // Set по slug не поможет — нужно отслеживать уже добавленные label-ы.
+
+                const seenLabels = new Set();
+                const finalSlugs = [];
+
+                // Сначала добавляем реальные slug из БД (приоритет)
+                for (const slug of fromDb) {
+                    const label = getCatLabel(slug);
+                    if (!seenLabels.has(label)) {
+                        seenLabels.add(label);
+                        finalSlugs.push(slug);
+                    }
                 }
 
-                // Объединяем через Set: fromDb ∪ DEFAULT_CATEGORIES → без дублей
-                // Сортируем по человекочитаемому label
-                const merged = [...new Set([...fromDb, ...DEFAULT_CATEGORIES])]
-                    .sort((a, b) => getCatLabel(a).localeCompare(getCatLabel(b), 'ru'));
+                // Затем добавляем DEFAULT только если такого label ещё нет
+                for (const slug of DEFAULT_CATEGORIES) {
+                    const label = getCatLabel(slug);
+                    if (!seenLabels.has(label)) {
+                        seenLabels.add(label);
+                        finalSlugs.push(slug);
+                    }
+                }
 
-                populateCategorySelect(select, merged);
-                console.log('[Admin] Categories ready:', merged.map(s => `${s}→${getCatLabel(s)}`));
+                // Сортируем по человекочитаемому label
+                finalSlugs.sort((a, b) =>
+                    getCatLabel(a).localeCompare(getCatLabel(b), 'ru')
+                );
+
+                populateCategorySelect(select, finalSlugs);
+                console.log('[Admin] Categories ready:',
+                    finalSlugs.map(s => `${s} → "${getCatLabel(s)}"`).join(', ')
+                );
 
             } catch (err) {
                 console.warn('[Admin] Unexpected categories error:', err);
-                // Крайний fallback — только дефолтный список
                 populateCategorySelect(select, DEFAULT_CATEGORIES);
-            } finally {
-                _categoriesLoading = false;
             }
         }
 
         function populateCategorySelect(select, slugs) {
-            // 1. Сохраняем текущий выбор
-            const current = select.value;
+            // 1. Полностью сбрасываем select — никаких старых option
+            select.innerHTML =
+                '<option value="" disabled selected>Выберите категорию</option>';
 
-            // 2. Полностью сбрасываем select — исключает любые дубли
-            select.innerHTML = '<option value="" disabled selected>Выберите категорию</option>';
-
-            // 3. Добавляем уникальные опции: value=slug, text=label
+            // 2. Добавляем уникальные опции: value=slug, textContent=label
             slugs.forEach(slug => {
                 const opt = document.createElement('option');
-                opt.value = slug;              // в БД пойдёт slug
-                opt.textContent = getCatLabel(slug); // пользователь видит label
+                opt.value = slug;              // slug → идёт в Supabase
+                opt.textContent = getCatLabel(slug); // label → видит пользователь
                 select.appendChild(opt);
             });
-
-            // 4. Восстанавливаем ранее выбранное значение (если было)
-            if (current && select.querySelector(`option[value="${current}"]`)) {
-                select.value = current;
-            }
         }
     </script>
 
