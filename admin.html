@@ -736,6 +736,16 @@
         let isAdmin = false;
         let authHandled = false; // Prevent double-firing
 
+        // ── Маппинг slug → label (идентичен categoryMap.js, но inline для непрерывного отображения) ──
+        const CATEGORY_LABELS = {
+            clothes: 'Спецодежда',
+            shoes: 'Спецобувь',
+            siz: 'Зимняя спецодежда',
+            accessories: 'Аксессуары',
+            welding: 'Сварочная форма',
+        };
+        function getCatLabel(slug) { return CATEGORY_LABELS[slug] ?? slug; }
+
         // ── Auth Guard via onAuthStateChange ──
         // INITIAL_SESSION fires once when Supabase has finished
         // restoring the session from localStorage — safe on Vercel/CDN.
@@ -1051,7 +1061,7 @@
 
                 const thumb = images[0] || 'https://via.placeholder.com/200x200?text=No+Image';
                 const price = product.price ? `${Number(product.price).toLocaleString('ru')} ₸` : 'По запросу';
-                const catLabel = product.category || "—";
+                const catLabel = getCatLabel(product.category);
 
                 const item = document.createElement('div');
                 item.className = 'product-list-item';
@@ -1106,9 +1116,9 @@
 
                 if (error) {
                     console.warn('[Admin] Categories load error:', error.message);
-                    // Fallback: показываем стандартные категории
+                    // Fallback: показываем стандартные slug
                     populateCategorySelect(select, [
-                        'clothes', 'siz', 'shoes', 'accessories', 'Сварочная форма'
+                        'clothes', 'siz', 'shoes', 'accessories', 'welding'
                     ]);
                     return;
                 }
@@ -1122,14 +1132,15 @@
                     )
                 ].sort((a, b) => a.localeCompare(b, 'ru'));
 
-                // Если в БД ещё нет товаров — показываем стартовый набор
+                // Гарантированный набор slug — всегда будут в каталоге
                 const fallbackList = [
-                    'clothes', 'siz', 'shoes', 'accessories', 'Сварочная форма'
+                    'clothes', 'siz', 'shoes', 'accessories', 'welding'
                 ];
 
-                // Объединяем: уникальные из БД + гарантированные
+                // Объединяем: уникальные из БД + гарантированные slug
+                // сортируем по человекочитаемому label
                 const merged = [...new Set([...categories, ...fallbackList])]
-                    .sort((a, b) => a.localeCompare(b, 'ru'));
+                    .sort((a, b) => getCatLabel(a).localeCompare(getCatLabel(b), 'ru'));
 
                 populateCategorySelect(select, merged);
                 console.log('[Admin] Categories loaded:', merged);
@@ -1138,15 +1149,15 @@
             }
         }
 
-        function populateCategorySelect(select, categories) {
-            // Сохраняем выбранное значение
+        function populateCategorySelect(select, slugs) {
+            // Сохраняем выбранный slug
             const current = select.value;
             // Оставляем только placeholder
             select.innerHTML = '<option value="" disabled selected>Выберите категорию</option>';
-            categories.forEach(cat => {
+            slugs.forEach(slug => {
                 const opt = document.createElement('option');
-                opt.value = cat;
-                opt.textContent = cat;
+                opt.value = slug;                  // слаг — идёт в БД
+                opt.textContent = getCatLabel(slug); // label — видит пользователь
                 select.appendChild(opt);
             });
             // Восстанавливаем выбор, если было что-то выбрано

@@ -4,9 +4,10 @@
 // ✅ Поддерживает realtime | ✅ Безопасный fallback | ✅ Фильтрация без reload
 
 import { supabase } from "./supabaseClient.js";
+import { getCategoryLabel } from "./categoryMap.js";
 
 // ── State ─────────────────────────────────────────────────────
-let activeCategory = "all"; // 'all' или название категории из БД
+let activeCategory = "all"; // 'all' или slug категории из БД
 let catalogChannel = null;
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -70,12 +71,12 @@ function renderCategoryButtons(categories) {
     allBtn.addEventListener("click", () => onCategoryClick("all", allBtn));
     container.appendChild(allBtn);
 
-    // Кнопки из БД
+    // Кнопки из БД — data-category хранит slug, textContent показывает label
     categories.forEach(cat => {
         const btn = document.createElement("button");
         btn.className = "filter-btn" + (activeCategory === cat ? " active" : "");
-        btn.setAttribute("data-category", cat);
-        btn.textContent = cat;
+        btn.setAttribute("data-category", cat); // slug — для Supabase-запросов
+        btn.textContent = getCategoryLabel(cat);  // label — для пользователя
         btn.addEventListener("click", () => onCategoryClick(cat, btn));
         container.appendChild(btn);
     });

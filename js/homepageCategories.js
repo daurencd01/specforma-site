@@ -4,41 +4,7 @@
 // Не касается auth логики, admin.html, redirect.
 
 import { supabase } from "./supabaseClient.js";
-
-// ── Маппинг: category value → { slug, label, img } ───────────
-// slug используется как ?cat= параметр в catalog.html
-// img — Unsplash-фото для фона карточки категории
-const CATEGORY_META = {
-    clothes: {
-        label: "Рабочая одежда",
-        slug: "clothes",
-        img: "https://images.unsplash.com/photo-1541888086225-ee89dd5da9ad?auto=format&fit=crop&q=80&w=800",
-    },
-    shoes: {
-        label: "Спецобувь",
-        slug: "shoes",
-        img: "https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800",
-    },
-    siz: {
-        label: "Зимняя спецодежда",
-        slug: "siz",
-        img: "https://images.unsplash.com/photo-1565516087856-787bc12d28f8?auto=format&fit=crop&q=80&w=800",
-    },
-    accessories: {
-        label: "Аксессуары",
-        slug: "accessories",
-        img: "https://images.unsplash.com/photo-1588693892040-af46f2fc27f0?auto=format&fit=crop&q=80&w=800",
-    },
-    "Сварочная форма": {
-        label: "Сварочная форма",
-        slug: "Сварочная форма",
-        img: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800",
-    },
-};
-
-// Fallback если пришёл slug которого нет в маппинге
-const FALLBACK_IMG =
-    "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800";
+import { getCategoryLabel, getCategoryImage, CATEGORY_FALLBACK_IMG } from "./categoryMap.js";
 
 // ── Render ────────────────────────────────────────────────────
 
@@ -60,23 +26,20 @@ function renderCategories(slugs) {
     container.innerHTML = "";
 
     slugs.forEach((slug, i) => {
-        const meta = CATEGORY_META[slug] ?? {
-            label: slug,
-            slug,
-            img: FALLBACK_IMG,
-        };
+        const label = getCategoryLabel(slug);
+        const img = getCategoryImage(slug);
 
         const a = document.createElement("a");
-        a.href = `catalog.html?cat=${encodeURIComponent(meta.slug)}`;
+        a.href = `catalog.html?cat=${encodeURIComponent(slug)}`;
         a.className = "category-card animate-on-scroll";
         if (i % 2 !== 0) a.style.transitionDelay = "100ms";
 
         a.innerHTML = `
-      <img src="${meta.img}" alt="${meta.label}" class="category-img"
-           loading="lazy" onerror="this.src='${FALLBACK_IMG}'">
+      <img src="${img}" alt="${label}" class="category-img"
+           loading="lazy" onerror="this.src='${CATEGORY_FALLBACK_IMG}'">
       <div class="category-overlay"></div>
       <div class="category-content">
-        <h3 class="category-title">${meta.label}</h3>
+        <h3 class="category-title">${label}</h3>
         <div class="category-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                viewBox="0 0 24 24" fill="none" stroke="currentColor"
