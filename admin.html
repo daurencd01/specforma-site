@@ -1104,9 +1104,20 @@
         // loadProducts() is called inside the auth session check above.
 
         // ── Load Admin Category Options ──
+        // DEFAULT_CATEGORIES — гарантированный набор slug,
+        // который всегда присутствует в select (даже если БД пустая).
+        const DEFAULT_CATEGORIES = [
+            'clothes', 'siz', 'shoes', 'accessories', 'welding'
+        ];
+
+        // Флаг: не перезаписывать select если загрузка уже в процессе
+        let _categoriesLoading = false;
+
         async function loadAdminCategories() {
             const select = document.getElementById('category');
             if (!select) return;
+            if (_categoriesLoading) return; // предотвращаем параллельный двойной вызов
+            _categoriesLoading = true;
 
             console.log('[Admin] Loading categories for select...');
             try {
@@ -1114,54 +1125,55 @@
                     .from('products')
                     .select('category');
 
-                if (error) {
-                    console.warn('[Admin] Categories load error:', error.message);
-                    // Fallback: показываем стандартные slug
-                    populateCategorySelect(select, [
-                        'clothes', 'siz', 'shoes', 'accessories', 'welding'
-                    ]);
-                    return;
-                }
-
-                // Дедупликация + сортировка
-                const categories = [
+                // Slug из БД (дедуплицированные)
+                const fromDb = error ? [] : [
                     ...new Set(
                         (data ?? [])
                             .map(p => p.category?.trim())
                             .filter(Boolean)
                     )
-                ].sort((a, b) => a.localeCompare(b, 'ru'));
-
-                // Гарантированный набор slug — всегда будут в каталоге
-                const fallbackList = [
-                    'clothes', 'siz', 'shoes', 'accessories', 'welding'
                 ];
 
-                // Объединяем: уникальные из БД + гарантированные slug
-                // сортируем по человекочитаемому label
-                const merged = [...new Set([...categories, ...fallbackList])]
+                if (error) {
+                    console.warn('[Admin] Categories load error:', error.message, '— using defaults');
+                }
+
+                // Объединяем через Set: fromDb ∪ DEFAULT_CATEGORIES → без дублей
+                // Сортируем по человекочитаемому label
+                const merged = [...new Set([...fromDb, ...DEFAULT_CATEGORIES])]
                     .sort((a, b) => getCatLabel(a).localeCompare(getCatLabel(b), 'ru'));
 
                 populateCategorySelect(select, merged);
-                console.log('[Admin] Categories loaded:', merged);
+                console.log('[Admin] Categories ready:', merged.map(s => `${s}→${getCatLabel(s)}`));
+
             } catch (err) {
                 console.warn('[Admin] Unexpected categories error:', err);
+                // Крайний fallback — только дефолтный список
+                populateCategorySelect(select, DEFAULT_CATEGORIES);
+            } finally {
+                _categoriesLoading = false;
             }
         }
 
         function populateCategorySelect(select, slugs) {
-            // Сохраняем выбранный slug
+            // 1. Сохраняем текущий выбор
             const current = select.value;
-            // Оставляем только placeholder
+
+            // 2. Полностью сбрасываем select — исключает любые дубли
             select.innerHTML = '<option value="" disabled selected>Выберите категорию</option>';
+
+            // 3. Добавляем уникальные опции: value=slug, text=label
             slugs.forEach(slug => {
                 const opt = document.createElement('option');
-                opt.value = slug;                  // слаг — идёт в БД
-                opt.textContent = getCatLabel(slug); // label — видит пользователь
+                opt.value = slug;              // в БД пойдёт slug
+                opt.textContent = getCatLabel(slug); // пользователь видит label
                 select.appendChild(opt);
             });
-            // Восстанавливаем выбор, если было что-то выбрано
-            if (current) select.value = current;
+
+            // 4. Восстанавливаем ранее выбранное значение (если было)
+            if (current && select.querySelector(`option[value="${current}"]`)) {
+                select.value = current;
+            }
         }
     </script>
 
