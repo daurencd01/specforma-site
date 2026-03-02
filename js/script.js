@@ -238,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data, error } = await window.supabase
         .from('products')
         .select('*')
+        .eq('hidden', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -253,10 +254,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Auto-start on catalog page
-  if (document.getElementById('products-container')) {
+  // Auto-start on catalog page — но только если catalogCategories.js НЕ управляет страницей
+  // catalogCategories.js наличие определяется по #categories-container
+  const hasDynamicCatalog = !!document.getElementById('categories-container');
+  if (document.getElementById('products-container') && !hasDynamicCatalog) {
     loadProducts();
-  } else {
+  } else if (!hasDynamicCatalog) {
     initFilters(); // For pages without dynamic products
   }
 

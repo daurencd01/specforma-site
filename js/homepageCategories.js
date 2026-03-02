@@ -29,6 +29,11 @@ const CATEGORY_META = {
         slug: "accessories",
         img: "https://images.unsplash.com/photo-1588693892040-af46f2fc27f0?auto=format&fit=crop&q=80&w=800",
     },
+    "Сварочная форма": {
+        label: "Сварочная форма",
+        slug: "Сварочная форма",
+        img: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800",
+    },
 };
 
 // Fallback если пришёл slug которого нет в маппинге
@@ -110,7 +115,8 @@ async function loadHomepageCategories() {
     try {
         const { data, error } = await supabase
             .from("products")
-            .select("category");
+            .select("category")
+            .eq("hidden", false);
 
         if (error) {
             console.warn("[Categories] Supabase error:", error.message);

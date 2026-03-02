@@ -652,10 +652,7 @@
                         <label for="category">Категория <span class="required">*</span></label>
                         <select id="category" required>
                             <option value="" disabled selected>Выберите категорию</option>
-                            <option value="clothes">Спецодежда</option>
-                            <option value="siz">Зимняя спецодежда</option>
-                            <option value="shoes">Спецобувь</option>
-                            <option value="accessories">Аксессуары</option>
+                            <!-- Категории загружаются динамически из Supabase -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -786,6 +783,7 @@
                 const emailEl = document.getElementById("admin-email");
                 if (emailEl) emailEl.textContent = user.email;
 
+                loadAdminCategories();
                 loadProducts();
             }
         });
@@ -1053,7 +1051,7 @@
 
                 const thumb = images[0] || 'https://via.placeholder.com/200x200?text=No+Image';
                 const price = product.price ? `${Number(product.price).toLocaleString('ru')} ₸` : 'По запросу';
-                const catLabel = { clothes: 'Спецодежда', siz: 'Зимняя', shoes: 'Спецобувь', accessories: 'Аксессуары' }[product.category] || product.category;
+                const catLabel = product.category || "—";
 
                 const item = document.createElement('div');
                 item.className = 'product-list-item';
@@ -1094,6 +1092,66 @@
         }
 
         // loadProducts() is called inside the auth session check above.
+
+        // ── Load Admin Category Options ──
+        async function loadAdminCategories() {
+            const select = document.getElementById('category');
+            if (!select) return;
+
+            console.log('[Admin] Loading categories for select...');
+            try {
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('category');
+
+                if (error) {
+                    console.warn('[Admin] Categories load error:', error.message);
+                    // Fallback: показываем стандартные категории
+                    populateCategorySelect(select, [
+                        'clothes', 'siz', 'shoes', 'accessories', 'Сварочная форма'
+                    ]);
+                    return;
+                }
+
+                // Дедупликация + сортировка
+                const categories = [
+                    ...new Set(
+                        (data ?? [])
+                            .map(p => p.category?.trim())
+                            .filter(Boolean)
+                    )
+                ].sort((a, b) => a.localeCompare(b, 'ru'));
+
+                // Если в БД ещё нет товаров — показываем стартовый набор
+                const fallbackList = [
+                    'clothes', 'siz', 'shoes', 'accessories', 'Сварочная форма'
+                ];
+
+                // Объединяем: уникальные из БД + гарантированные
+                const merged = [...new Set([...categories, ...fallbackList])]
+                    .sort((a, b) => a.localeCompare(b, 'ru'));
+
+                populateCategorySelect(select, merged);
+                console.log('[Admin] Categories loaded:', merged);
+            } catch (err) {
+                console.warn('[Admin] Unexpected categories error:', err);
+            }
+        }
+
+        function populateCategorySelect(select, categories) {
+            // Сохраняем выбранное значение
+            const current = select.value;
+            // Оставляем только placeholder
+            select.innerHTML = '<option value="" disabled selected>Выберите категорию</option>';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                select.appendChild(opt);
+            });
+            // Восстанавливаем выбор, если было что-то выбрано
+            if (current) select.value = current;
+        }
     </script>
 
 </body>

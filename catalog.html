@@ -85,13 +85,9 @@
     <section class="catalog-section">
         <div class="container">
 
-            <!-- Filters -->
-            <div class="filters animate-on-scroll">
-                <button class="filter-btn active" data-filter="all">Все товары</button>
-                <button class="filter-btn" data-filter="clothes">Спецодежда</button>
-                <button class="filter-btn" data-filter="shoes">Спецобувь</button>
-                <button class="filter-btn" data-filter="siz" style="white-space: nowrap;">Зимняя спецодежда</button>
-                <button class="filter-btn" data-filter="accessories">Аксессуары</button>
+            <!-- Filters: динамически загружаются из Supabase -->
+            <div id="categories-container" class="filters animate-on-scroll">
+                <!-- Кнопки категорий рендерятся через catalogCategories.js -->
             </div>
 
             <!-- Products Grid: Dynamic from Supabase -->
@@ -376,6 +372,7 @@
     </footer>
 
 
+    <script type="module" src="js/catalogCategories.js"></script>
     <script type="module" src="js/script.js"></script>
 </body>
 
