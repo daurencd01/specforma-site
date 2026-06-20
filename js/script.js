@@ -71,6 +71,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(fab);
   }
 
+  /* --- Developer credit in footer --- */
+  const footerBottom = document.querySelector('.footer-bottom');
+  if (footerBottom) {
+    const spans = footerBottom.querySelectorAll('span');
+    const creditSpan = spans.length > 1 ? spans[spans.length - 1] : footerBottom.appendChild(document.createElement('span'));
+    creditSpan.className = 'dev-credit';
+    creditSpan.innerHTML =
+      `Нужен такой сайт? Напишите мне в Instagram — ` +
+      `<a href="https://instagram.com/dauren_cd" target="_blank" rel="noopener noreferrer">@dauren_cd</a>`;
+  }
+
   /* --- Header Scroll Effect --- */
   const header = document.querySelector('.header');
   if (header) {
